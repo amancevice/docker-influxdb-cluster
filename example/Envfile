@@ -1,0 +1,4 @@
+INFLUX___META___DIR="/mnt/db/meta"
+INFLUX___DATA___DIR="/mnt/db/data"
+INFLUX___DATA___WAL_DIR="/mnt/influx/wal"
+INFLUX___HINTED_HANDOFF___DIR="/mnt/db/hh"

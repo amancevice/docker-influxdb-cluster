@@ -1,9 +1,10 @@
 # Configure config
-/usr/bin/env python /root/influxd_config.py > ${INFLUXD_CONFIG}
+python influxd_config.py
 
 # Start InfluxDB
+echo
 cat ${INFLUXD_CONFIG}
 echo
-echo influxd -config ${INFLUXD_CONFIG} $*
+echo influxd -config ${INFLUXD_CONFIG} ${INFLUXD_OPTS} $*
 echo
-influxd -config ${INFLUXD_CONFIG} $*
+influxd -config ${INFLUXD_CONFIG} ${INFLUXD_OPTS} $*
