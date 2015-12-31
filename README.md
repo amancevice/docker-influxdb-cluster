@@ -46,13 +46,7 @@ Which yields:
   compute-no-more-than = "5m0s"
 ```
 
-**Suggestion:** Store your patched options in an Envfile to make container invocation simpler:
-
-```bash
-docker run --rm -it\
-  --env-file ./Envfile \
-  amancevice/influxdb-cluster
-```
+**Suggestion:** Store your patched options in an Envfile to make container invocation simpler.
 
 
 ### Mounting A Custom Configuration
@@ -61,9 +55,9 @@ Instead of patching individual options, an entire configuration can be mounted i
 
 ```bash
 docker run --rm -it\
-  --volume $(pwd)/example:/influxdb \
-  --env INFLUXD_CONFIG=/influxdb/influxdb.conf \
-  amancevice/influxdb-cluster
+    --volume $(pwd)/example:/influxdb \
+    --env INFLUXD_CONFIG=/influxdb/influxdb.conf \
+    amancevice/influxdb-cluster
 ```
 
 
@@ -78,7 +72,7 @@ Configuring the node to start as part of a cluster can be done one of two ways: 
 
 Assume we have set up three EC2 instances on AWS using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.9/introduction/installation/#hosting-on-aws). Having followed the instructions, assume two EBS volumes have been mounted at `/mnt/influx` and `/mnt/db`. These volumes are to be mounted to the container at the same location as the host.
 
-EC2 instances:
+**EC2 instances:**
 * ix0.mycluster
 * ix1.mycluster
 * ix2.mycluster
@@ -86,9 +80,7 @@ EC2 instances:
 
 ### Patch the configuration
 
-Create an Envfile that makes the [recommended patches](https://docs.influxdata.com/influxdb/v0.9/introduction/installation/#configuring-the-instance).
-
-[Envfile](./example/Envfile):
+Create an Envfile that makes the [recommended patches](https://docs.influxdata.com/influxdb/v0.9/introduction/installation/#configuring-the-instance). See the example at [`./example/Envfile`](./example/Envfile):
 
 ```bash
 INFLUX___META___DIR="/mnt/db/meta"
@@ -100,15 +92,15 @@ INFLUX___HINTED_HANDOFF___DIR="/mnt/db/hh"
 
 ### Bring up the first node
 
-Bring up the first leader node in detached-mode and name it `"ix0"`. Expose the admin and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration. Use the `CMD` `"-hostname ix0.mycluster:8088"` to indicate that this node is accessible from the host `ix0.mycluster` and its bind-port is `8088`.
+Bring up the first leader node in detached-mode and name it `"ix0"`. Expose the bind, admin, and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration. Use the `CMD` `"-hostname ix0.mycluster:8088"` to indicate that this node is accessible from the host `ix0.mycluster` and its bind-port is `8088`:
 
 ```bash
 docker run --name ix0 -d
-    -p 8083:8083 -p 8086:8086 \
+    -p 8088:8088 -p 8083:8083 -p 8086:8086 \
     -v /mnt/influx:/mnt/influx \
     -v /mnt/db:/mnt/db \
     --env-file ./Envfile
-    amancevice/influxdb-cluster -hostname ix0.mycluser:8088
+    amancevice/influxdb-cluster -hostname ix0.mycluster:8088
 ```
 
 
@@ -118,11 +110,12 @@ The second follower node almost identically to the first node, but alter its `CM
 
 ```bash
 docker run --name ix1 -d
+    -p 8088:8088 \
     -v /mnt/influx:/mnt/influx \
     -v /mnt/db:/mnt/db \
     --env-file ./Envfile
     amancevice/influxdb-cluster \
-        -hostname ix1.mycluser:8088 -join ix0.mycluser:8088
+        -hostname ix1.mycluster:8088 -join ix0.mycluster:8088
 ```
 
 
@@ -132,13 +125,14 @@ Bring up the third follower node following this pattern:
 
 ```bash
 docker run --name ix1 -d
+    -p 8088:8088 \
     -v /mnt/influx:/mnt/influx \
     -v /mnt/db:/mnt/db \
     --env-file ./Envfile
     amancevice/influxdb-cluster \
-        -hostname ix2.mycluser:8088 -join ix0.mycluser:8088,ix1.mycluser:8088
+        -hostname ix2.mycluster:8088 -join ix0.mycluster:8088,ix1.mycluster:8088
 ```
 
 And so on...
 
-See the example at [./example/cluster.sh](./example/cluster.sh) to see how to bring up a simple cluster on your machine.
+See the example at [`./example/cluster.sh`](./example/cluster.sh) to see how to bring up a simple cluster on your machine.
