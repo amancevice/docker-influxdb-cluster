@@ -92,7 +92,7 @@ INFLUX___HINTED_HANDOFF___DIR="/mnt/db/hh"
 
 ### Bring up the first node
 
-Bring up the first leader node in detached-mode and name it `"ix0"`. Expose the bind, admin, and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration. Use the `CMD` `"-hostname ix0.mycluster:8088"` to indicate that this node is accessible from the host `ix0.mycluster` and its bind-port is `8088`:
+Bring up the first leader node in detached-mode and name it `ix0`. Expose the bind, admin, and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration. Use the `CMD` `-hostname ix0.mycluster:8088` to indicate that this node is accessible from the host `ix0.mycluster` and its bind-port is `8088`:
 
 ```bash
 docker run --name ix0 -d
