@@ -4,8 +4,8 @@ MAINTAINER amancevice@cargometrics.com
 
 # To force an update of apt-get instead of a cached version
 RUN echo as of 2015-12-30
-RUN apt-get update
-RUN apt-get install -y python python-pip wget && pip install configparser
+RUN apt-get update && \
+    apt-get install -y python python-pip wget && pip install configparser
 
 # Install InfluxDB
 ENV INFLUXDB_VERSION=0.9.6.1 \
