@@ -1,10 +1,8 @@
-# VERSION: 0.0.1
 FROM ubuntu:14.04
 MAINTAINER amancevice@cargometrics.com
 
-# To force an update of apt-get instead of a cached version
-RUN echo as of 2015-12-30
-RUN apt-get update && \
+RUN echo as of 2015-12-30 && \
+    apt-get update && \
     apt-get install -y python python-pip wget && pip install configparser
 
 # Install InfluxDB
