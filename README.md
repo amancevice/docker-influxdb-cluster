@@ -124,10 +124,10 @@ docker run --detach --name ix0 \
     --env INFLUX___META___BIND_ADDRESS='"ix0.mycluster:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix0.mycluster:8091"' \
     --env-file ./Envfile \
-    --port 8083:8083 \
-    --port 8086:8086 \
-    --port 8088:8088 \
-    --port 8091:8091 \
+    --publish 8083:8083 \
+    --publish 8086:8086 \
+    --publish 8088:8088 \
+    --publish 8091:8091 \
     --volume /mnt/db:/mnt/db \
     --volume /mnt/influx:/mnt/influx \
     amancevice/influxdb-cluster
@@ -143,10 +143,10 @@ docker run --detach --name ix1 \
     --env INFLUX___META___BIND_ADDRESS='"ix1.mycluster:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix1.mycluster:8091"' \
     --env-file ./Envfile \
-    --port 8083:8083 \
-    --port 8086:8086 \
-    --port 8088:8088 \
-    --port 8091:8091 \
+    --publish 8083:8083 \
+    --publish 8086:8086 \
+    --publish 8088:8088 \
+    --publish 8091:8091 \
     --volume /mnt/db:/mnt/db \
     --volume /mnt/influx:/mnt/influx \
     amancevice/influxdb-cluster -join ix0.mycluster:8091
@@ -162,10 +162,10 @@ docker run --detach --name ix2 \
     --env INFLUX___META___BIND_ADDRESS='"ix2.mycluster:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix2.mycluster:8091"' \
     --env-file ./Envfile \
-    --port 8083:8083 \
-    --port 8086:8086 \
-    --port 8088:8088 \
-    --port 8091:8091 \
+    --publish 8083:8083 \
+    --publish 8086:8086 \
+    --publish 8088:8088 \
+    --publish 8091:8091 \
     --volume /mnt/db:/mnt/db \
     --volume /mnt/influx:/mnt/influx \
     amancevice/influxdb-cluster -join ix0.mycluster:8091
