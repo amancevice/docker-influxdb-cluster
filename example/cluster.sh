@@ -44,3 +44,10 @@ echo "SHOW SERVERS:"
 sleep 1
 docker run --rm -it --net influxdb --entrypoint /usr/bin/influx \
     amancevice/influxdb-cluster:$version -host ix0 -execute "SHOW SERVERS"
+
+# Cleanup
+echo "Removed leader node \"$(docker rm -f ix0)\""
+echo "Removed follower node \"$(docker rm -f ix1)\""
+echo "Removed follower node \"$(docker rm -f ix2)\""
+docker network rm influxdb
+echo "Removed network \"influxdb\""
