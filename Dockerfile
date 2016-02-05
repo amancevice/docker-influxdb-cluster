@@ -7,14 +7,14 @@ RUN echo as of 2015-12-30 && \
 
 # Install InfluxDB
 ENV INFLUXDB_VERSION=0.10.0-1 \
-    INFLUXD_CONFIG=/etc/influxdb/influxdb.conf
+    INFLUXD_CONFIG=/etc/influxdb/influxdb.conf \
+    INFLUXD_CUSTOM=/root/influxdb.conf.custom
 RUN wget https://s3.amazonaws.com/influxdb/influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     sudo dpkg -i influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     rm /influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     mv ${INFLUXD_CONFIG} ${INFLUXD_CONFIG}.install
 
 # Startup
-ADD influxd_config.py /root/influxd_config.py
-ADD startup.sh /root/startup.sh
+COPY influxd_config.py  startup.sh /root/
 WORKDIR /root
 ENTRYPOINT [ "/bin/bash", "/root/startup.sh" ]

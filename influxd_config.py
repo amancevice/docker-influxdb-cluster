@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 """ InfluxDB Docker config generator. """
 
 
@@ -13,20 +10,23 @@ import subprocess
 
 def create_config():
     """ Create a fresh InfluxDB config and patch with ENV variables if needed. """
-    # Get influxd executable path
-    influxd = subprocess.check_output(['/usr/bin/which', 'influxd']).strip()
     # Get default config from `influxd config`
     config = configparser.ConfigParser()
-    config.read_string(normalize_config(influxd_config(influxd)))
+    config.read_string(normalize_config(influxd_config(os.getenv('INFLUXD_CUSTOM'))))
     # Patch config with any ENV variables
     patched_config = patch_config(config)
     with open(INFLUXD_CONFIG, 'w') as cfg:
         cfg.write(denormalize_config(patched_config))
 
 
-def influxd_config(influxd):
-    """ Return default InfluxDB config from `influxd config`. """
-    return unicode(subprocess.check_output([influxd, 'config']))
+def influxd_config(custom=None):
+    """ Return default InfluxDB config as unicode using `influxd config`,
+        or `influxd config -config` if custom path is provided. """
+    cmd = [ '/usr/bin/influxd', 'config' ]
+    if custom is not None and os.path.exists(custom):
+        cmd += [ '-config', custom ]
+    print "Generating config with `%s`" % ' '.join(cmd)
+    return unicode(subprocess.check_output(cmd))
 
 
 def normalize_config(config):

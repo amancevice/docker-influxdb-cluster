@@ -1,0 +1,9 @@
+[meta]
+  dir = "/mnt/db/meta"
+
+[data]
+  dir = "/mnt/db/data"
+  wal-dir = "/mnt/influx/wal"
+
+[hinted-handoff]
+  dir = "/mnt/db/hh"
