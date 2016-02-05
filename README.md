@@ -86,14 +86,12 @@ docker run --rm --interactive --tty \
 
 It would be a good idea to review the instructions on InfluxDB's documentation on [clustering](https://docs.influxdata.com/influxdb/v0.10/guides/clustering/#configuration) before continuing.
 
-Configuring the node to start as part of a cluster can be done one of two ways: by storing clustering options in the `INFLUXD_OPTS` environmental variable or by passing them as part of the Docker `CMD` invocation. Both accomplish the same thing and it is only a matter of preference which method is used.
 
-
-## Examples
+### Example Cluster Setup
 
 Assume we have set up three EC2 instances on AWS using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#hosting-on-aws). Having followed the instructions, assume two EBS volumes have been mounted at `/mnt/influx` and `/mnt/db`. These volumes are to be mounted to the container at the same location as the host.
 
-**EC2 instances:**
+Assume that the addressable hostnames for each of the three nodes are as follows:
 * ix0.mycluster
 * ix1.mycluster
 * ix2.mycluster
@@ -101,7 +99,7 @@ Assume we have set up three EC2 instances on AWS using [InfluxDB's installation 
 
 ### Patch the configuration
 
-Create an Envfile that makes the [recommended patches](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#configuring-the-instance). See the example at [`./example/Envfile`](./example/Envfile):
+Create an Envfile for each node in the cluster that makes the [recommended patches](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#configuring-the-instance). See the example at [`./example/Envfile`](./example/Envfile):
 
 ```bash
 INFLUX___META___DIR="/mnt/db/meta"
@@ -110,20 +108,22 @@ INFLUX___DATA___WAL_DIR="/mnt/influx/wal"
 INFLUX___HINTED_HANDOFF___DIR="/mnt/db/hh"
 ```
 
+As of InfluxDB `0.10.0`, you *must* patch the `[meta]` section's values for `bind-address` and `http-bind-address` as well as the `[http]` `bind-address` option. We will use the values `<hostname>:8088`, `<hostname>:8091`, and `<hostname>:8086`, respectively.
+
+**NOTE** the hostnames used must be accessible from the other nodes in the cluster. Additionally, we **must** assign the true hostname to the container using the `--hostname` option of `docker run`/`docker create`.
+
 
 ### Bring up the first node
 
-Bring up the first leader node in detached-mode and name it `ix0`. Expose the bind, admin, and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration.
-
-As of InfluxDB `0.10.0`, you *must* patch the `[meta]` section's values for `bind-address` and `http-bind-address`. Use the values `<hostname>:8088` and `<hostname>:8091`, respectively.
-
-Update the Envfile or pass in directly:
+Update the Envfile with the patched bind addresses or pass them in directly:
 
 ```bash
 docker run --detach --name ix0 \
     --env INFLUX___META___BIND_ADDRESS='"ix0.mycluster:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix0.mycluster:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"ix0.mycluster:8086"' \
     --env-file ./Envfile \
+    --hostname ix0.mycluster \
     --publish 8083:8083 \
     --publish 8086:8086 \
     --publish 8088:8088 \
@@ -136,13 +136,15 @@ docker run --detach --name ix0 \
 
 ### Bring up the second node
 
-The second follower node almost identically to the first node, changing its `bind-address` and `http-bind-address` to reflect the node's hostname, and altering the `CMD` to join to the leader on port `8091`:
+The second follower node is started almost identically to the first node, altering the `CMD` to join to the leader on port `8091`:
 
 ```bash
 docker run --detach --name ix1 \
     --env INFLUX___META___BIND_ADDRESS='"ix1.mycluster:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix1.mycluster:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"ix1.mycluster:8086"' \
     --env-file ./Envfile \
+    --hostname ix1.mycluster \
     --publish 8083:8083 \
     --publish 8086:8086 \
     --publish 8088:8088 \
@@ -161,7 +163,9 @@ Bring up the third follower node following this pattern:
 docker run --detach --name ix2 \
     --env INFLUX___META___BIND_ADDRESS='"ix2.mycluster:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix2.mycluster:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"ix2.mycluster:8086"' \
     --env-file ./Envfile \
+    --hostname ix2.mycluster \
     --publish 8083:8083 \
     --publish 8086:8086 \
     --publish 8088:8088 \

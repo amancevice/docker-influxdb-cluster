@@ -10,6 +10,7 @@ echo "Starting leader node \"ix0\""
 docker run --detach --name ix0 \
     --env INFLUX___META___BIND_ADDRESS='"ix0:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix0:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"ix0:8086"' \
     --hostname ix0 \
     --net influxdb \
     --publish 8083 \
@@ -24,6 +25,7 @@ sleep 1
 docker run --detach --name ix1 \
     --env INFLUX___META___BIND_ADDRESS='"ix1:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix1:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"ix1:8086"' \
     --hostname ix1 \
     --net influxdb \
     --publish 8083 \
@@ -38,6 +40,7 @@ sleep 1
 docker run --detach --name ix2 \
     --env INFLUX___META___BIND_ADDRESS='"ix2:8088"' \
     --env INFLUX___META___HTTP_BIND_ADDRESS='"ix2:8091"' \
+    --env INFLUX___HTTP___BIND_ADDRESS='"ix2:8086"' \
     --hostname ix2 \
     --net influxdb \
     --publish 8083 \
