@@ -16,9 +16,30 @@ The default behavior of the node is to create a new configuration file by execut
 Values in the generated file can be patched/overridden through `ENV` variables or by mounting your own configuration.
 
 
+### Patching/Overriding defaults with a partial config
+
+As of InfluxDB `0.10.0` the `influxd config` command accepts a `-config` option to submit a partial config that will overwrite the default generation. Mounting a custom partial config can be used to patch defaults without writing an entire config file.
+
+Consider the following partial custom config:
+
+```ini
+[meta]
+  dir = "/mnt/db/meta"
+
+[data]
+  dir = "/mnt/db/data"
+  wal-dir = "/mnt/influx/wal"
+
+[hinted-handoff]
+  dir = "/mnt/db/hh"
+```
+
+Mounting this file to `/root/influxdb.conf.custom` when creating/starting the container will patch the default config with the values provided. Partial custom configurations can be mounted elsewhere but the value of the `ENV` variable `INFLUXD_CUSTOM` must be changed in addition to reflect the non-standard location of the custom partial file.
+
+
 ### Patching/Overriding Defaults with `ENV`
 
-If it is the case that *most* of the default configuration is acceptable, values can be patched piecemeal by defining `ENV` variables using the naming convention `INFLUX___<section>___<option>=<value>`.
+If it is the case that *most* of the default configuration is acceptable, values can be patched piecemeal by defining `ENV` variables using the naming convention `INFLUX___<section>___<option>=<value>`. In many cases, passing `ENV` variables is easier than mounting custom configs as well. Passing `ENV` variables in this manner overrides custom partial files as described above.
 
 The variable must start with the string `"INFLUX"`, followed by three underscores (`___`), the name of the configuration section, three more underscores (`___`), and the name of the option.
 
@@ -54,23 +75,23 @@ Which yields:
 Instead of patching individual options, an entire configuration can be mounted into the container. Ensure that the location of the mounted config is reflected in the `INFLUXD_CONFIG` variable:
 
 ```bash
-docker run --rm -it\
-    --volume $(pwd)/example:/influxdb \
+docker run --rm --interactive --tty \
     --env INFLUXD_CONFIG=/influxdb/influxdb.conf \
+    --volume $(pwd)/example:/influxdb \
     amancevice/influxdb-cluster
 ```
 
 
 ## Clustering
 
-It would be a good idea to review the instructions on InfluxDB's documentation on [clustering](https://docs.influxdata.com/influxdb/v0.9/guides/clustering/#configuration) before continuing.
+It would be a good idea to review the instructions on InfluxDB's documentation on [clustering](https://docs.influxdata.com/influxdb/v0.10/guides/clustering/#configuration) before continuing.
 
 Configuring the node to start as part of a cluster can be done one of two ways: by storing clustering options in the `INFLUXD_OPTS` environmental variable or by passing them as part of the Docker `CMD` invocation. Both accomplish the same thing and it is only a matter of preference which method is used.
 
 
 ## Examples
 
-Assume we have set up three EC2 instances on AWS using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.9/introduction/installation/#hosting-on-aws). Having followed the instructions, assume two EBS volumes have been mounted at `/mnt/influx` and `/mnt/db`. These volumes are to be mounted to the container at the same location as the host.
+Assume we have set up three EC2 instances on AWS using [InfluxDB's installation guide](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#hosting-on-aws). Having followed the instructions, assume two EBS volumes have been mounted at `/mnt/influx` and `/mnt/db`. These volumes are to be mounted to the container at the same location as the host.
 
 **EC2 instances:**
 * ix0.mycluster
@@ -80,7 +101,7 @@ Assume we have set up three EC2 instances on AWS using [InfluxDB's installation 
 
 ### Patch the configuration
 
-Create an Envfile that makes the [recommended patches](https://docs.influxdata.com/influxdb/v0.9/introduction/installation/#configuring-the-instance). See the example at [`./example/Envfile`](./example/Envfile):
+Create an Envfile that makes the [recommended patches](https://docs.influxdata.com/influxdb/v0.10/introduction/installation/#configuring-the-instance). See the example at [`./example/Envfile`](./example/Envfile):
 
 ```bash
 INFLUX___META___DIR="/mnt/db/meta"
@@ -92,30 +113,43 @@ INFLUX___HINTED_HANDOFF___DIR="/mnt/db/hh"
 
 ### Bring up the first node
 
-Bring up the first leader node in detached-mode and name it `ix0`. Expose the bind, admin, and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration. Use the `CMD` `-hostname ix0.mycluster:8088` to indicate that this node is accessible from the host `ix0.mycluster` and its bind-port is `8088`:
+Bring up the first leader node in detached-mode and name it `ix0`. Expose the bind, admin, and REST ports, mount the EBS volumes, and use the above Envfile to patch the configuration.
+
+As of InfluxDB `0.10.0`, you *must* patch the `[meta]` section's values for `bind-address` and `http-bind-address`. Use the values `<hostname>:8088` and `<hostname>:8091`, respectively.
+
+Update the Envfile or pass in directly:
 
 ```bash
-docker run --name ix0 -d
-    -p 8088:8088 -p 8083:8083 -p 8086:8086 \
-    -v /mnt/influx:/mnt/influx \
-    -v /mnt/db:/mnt/db \
-    --env-file ./Envfile
-    amancevice/influxdb-cluster -hostname ix0.mycluster:8088
+docker run --detach --name ix0 \
+    --env INFLUX___META___BIND_ADDRESS='"ix0.mycluster:8088"' \
+    --env INFLUX___META___HTTP_BIND_ADDRESS='"ix0.mycluster:8091"' \
+    --env-file ./Envfile \
+    --port 8083:8083 \
+    --port 8086:8086 \
+    --port 8088:8088 \
+    --port 8091:8091 \
+    --volume /mnt/db:/mnt/db \
+    --volume /mnt/influx:/mnt/influx \
+    amancevice/influxdb-cluster
 ```
 
 
 ### Bring up the second node
 
-The second follower node almost identically to the first node, but alter its `CMD` to join to the leader:
+The second follower node almost identically to the first node, changing its `bind-address` and `http-bind-address` to reflect the node's hostname, and altering the `CMD` to join to the leader on port `8091`:
 
 ```bash
-docker run --name ix1 -d
-    -p 8088:8088 \
-    -v /mnt/influx:/mnt/influx \
-    -v /mnt/db:/mnt/db \
-    --env-file ./Envfile
-    amancevice/influxdb-cluster \
-        -hostname ix1.mycluster:8088 -join ix0.mycluster:8088
+docker run --detach --name ix1 \
+    --env INFLUX___META___BIND_ADDRESS='"ix1.mycluster:8088"' \
+    --env INFLUX___META___HTTP_BIND_ADDRESS='"ix1.mycluster:8091"' \
+    --env-file ./Envfile \
+    --port 8083:8083 \
+    --port 8086:8086 \
+    --port 8088:8088 \
+    --port 8091:8091 \
+    --volume /mnt/db:/mnt/db \
+    --volume /mnt/influx:/mnt/influx \
+    amancevice/influxdb-cluster -join ix0.mycluster:8091
 ```
 
 
@@ -124,13 +158,17 @@ docker run --name ix1 -d
 Bring up the third follower node following this pattern:
 
 ```bash
-docker run --name ix1 -d
-    -p 8088:8088 \
-    -v /mnt/influx:/mnt/influx \
-    -v /mnt/db:/mnt/db \
-    --env-file ./Envfile
-    amancevice/influxdb-cluster \
-        -hostname ix2.mycluster:8088 -join ix0.mycluster:8088,ix1.mycluster:8088
+docker run --detach --name ix2 \
+    --env INFLUX___META___BIND_ADDRESS='"ix2.mycluster:8088"' \
+    --env INFLUX___META___HTTP_BIND_ADDRESS='"ix2.mycluster:8091"' \
+    --env-file ./Envfile \
+    --port 8083:8083 \
+    --port 8086:8086 \
+    --port 8088:8088 \
+    --port 8091:8091 \
+    --volume /mnt/db:/mnt/db \
+    --volume /mnt/influx:/mnt/influx \
+    amancevice/influxdb-cluster -join ix0.mycluster:8091
 ```
 
 And so on...
