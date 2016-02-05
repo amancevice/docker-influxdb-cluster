@@ -12,7 +12,7 @@ def create_config():
     """ Create a fresh InfluxDB config and patch with ENV variables if needed. """
     # Get default config from `influxd config`
     config = configparser.ConfigParser()
-    config.read_string(normalize_config(influxd_config(os.getenv('INFLUXD_CUSTOM'))))
+    config.read_string(normalize_config(influxd_config(INFLUXD_CUSTOM)))
     # Patch config with any ENV variables
     patched_config = patch_config(config)
     with open(INFLUXD_CONFIG, 'w') as cfg:
@@ -25,7 +25,7 @@ def influxd_config(custom=None):
     cmd = [ '/usr/bin/influxd', 'config' ]
     if custom is not None and os.path.exists(custom):
         cmd += [ '-config', custom ]
-    print "Generating config with `%s`" % ' '.join(cmd)
+    print "Generating InfluxDB config at %s with `%s`" % (INFLUXD_CONFIG, ' '.join(cmd))
     return unicode(subprocess.check_output(cmd))
 
 
@@ -63,10 +63,10 @@ def main():
     if os.path.exists(INFLUXD_CONFIG):
         print "Existing InfluxDB config found at %s" % INFLUXD_CONFIG
     else:
-        print "Creating InfluxDB config at %s" % INFLUXD_CONFIG
         create_config()
 
 
 if __name__ == '__main__':
     INFLUXD_CONFIG = os.environ['INFLUXD_CONFIG']
+    INFLUXD_CUSTOM = os.environ['INFLUXD_CUSTOM']
     main()
