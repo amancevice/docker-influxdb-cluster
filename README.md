@@ -34,7 +34,7 @@ Consider the following partial custom config:
   dir = "/mnt/db/hh"
 ```
 
-Mounting this file to `/root/influxdb.conf.custom` when creating/starting the container will patch the default config with the values provided. Partial custom configurations can be mounted elsewhere but the value of the `ENV` variable `INFLUXD_CUSTOM` must be changed in addition to reflect the non-standard location of the custom partial file.
+Mounting this file to `/root/influxdb.conf.patch` when creating/starting the container will patch the default config with the values provided. Partial custom configurations can be mounted elsewhere but the value of the `ENV` variable `INFLUXD_PATCH` must be changed in addition to reflect the non-standard location of the custom partial file.
 
 
 ### Patching/Overriding Defaults with `ENV`

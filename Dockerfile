@@ -1,20 +1,20 @@
 FROM ubuntu:14.04
 MAINTAINER amancevice@cargometrics.com
 
-RUN echo as of 2015-12-30 && \
+RUN echo as of 2016-02-07 && \
     apt-get update && \
     apt-get install -y python python-pip wget && pip install configparser
 
 # Install InfluxDB
 ENV INFLUXDB_VERSION=0.10.0-1 \
     INFLUXD_CONFIG=/etc/influxdb/influxdb.conf \
-    INFLUXD_CUSTOM=/root/influxdb.conf.custom
+    INFLUXD_PATCH=/root/influxdb.conf.patch
 RUN wget https://s3.amazonaws.com/influxdb/influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     sudo dpkg -i influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     rm /influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     mv ${INFLUXD_CONFIG} ${INFLUXD_CONFIG}.install
 
 # Startup
-COPY influxd_config.py  startup.sh /root/
+COPY influxd_config.py startup.sh /root/
 WORKDIR /root
 ENTRYPOINT [ "/bin/bash", "/root/startup.sh" ]

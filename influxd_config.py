@@ -12,7 +12,7 @@ def create_config():
     """ Create a fresh InfluxDB config and patch with ENV variables if needed. """
     # Get default config from `influxd config`
     config = configparser.ConfigParser()
-    config.read_string(normalize_config(influxd_config(INFLUXD_CUSTOM)))
+    config.read_string(normalize_config(influxd_config(INFLUXD_PATCH)))
     # Patch config with any ENV variables
     patched_config = patch_config(config)
     with open(INFLUXD_CONFIG, 'w') as cfg:
@@ -68,5 +68,5 @@ def main():
 
 if __name__ == '__main__':
     INFLUXD_CONFIG = os.environ['INFLUXD_CONFIG']
-    INFLUXD_CUSTOM = os.environ['INFLUXD_CUSTOM']
+    INFLUXD_PATCH = os.environ['INFLUXD_PATCH']
     main()
