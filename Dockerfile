@@ -6,7 +6,7 @@ RUN echo as of 2016-02-19 && \
     apt-get install -y python python-pip wget && pip install configparser
 
 # Install InfluxDB
-ENV INFLUXDB_VERSION=0.10.1-1 \
+ENV INFLUXDB_VERSION=0.10.2-1 \
     INFLUXD_CONFIG=/etc/influxdb/influxdb.conf \
     INFLUXD_PATCH=/root/influxdb.conf.patch
 RUN wget https://s3.amazonaws.com/influxdb/influxdb_${INFLUXDB_VERSION}_amd64.deb && \
