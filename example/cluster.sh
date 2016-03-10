@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=0.10.2
+version=0.10.3
 
 echo "Creating docker bridge network \"influxdb\""
 docker network create --driver bridge influxdb
