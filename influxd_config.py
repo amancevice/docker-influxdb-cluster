@@ -1,60 +1,21 @@
 """ InfluxDB Docker config generator. """
 
 
-import configparser
-import io
 import os
-import re
 import subprocess
 
 
-def create_config():
-    """ Create a fresh InfluxDB config and patch with ENV variables if needed. """
-    # Get default config from `influxd config`
-    config = configparser.ConfigParser()
-    config.read_string(normalize_config(influxd_config(INFLUXD_PATCH)))
-    # Patch config with any ENV variables
-    patched_config = patch_config(config)
-    with open(INFLUXD_CONFIG, 'w') as cfg:
-        cfg.write(denormalize_config(patched_config))
-
-
-def influxd_config(custom=None):
-    """ Return default InfluxDB config as unicode using `influxd config`,
-        or `influxd config -config` if custom path is provided. """
-    cmd = [ '/usr/bin/influxd', 'config' ]
-    if custom is not None and os.path.exists(custom):
-        cmd += [ '-config', custom ]
-    print "Generating InfluxDB config at %s with `%s`" % (INFLUXD_CONFIG, ' '.join(cmd))
-    return unicode(subprocess.check_output(cmd))
-
-
-def normalize_config(config):
-    """ Move orphaned config to DEFAULT. """
-    orphans = re.findall('^[^\[].*?\n', config)
-    for orphan in orphans:
-        config = config.replace(orphan, '')
-    return "  ".join(["[DEFAULT]\n"]+orphans) + config
-
-
-def patch_config(config):
-    """ Replace config defaults with supplied ENV values. """
-    overrides = filter(lambda x: x.startswith('INFLUX___'), os.environ.keys())
-    dasher = lambda x: x.replace('_', '-').replace('--', '_').lower()
-    for override in overrides:
-        section, option = map(dasher, override.split('___')[1:])
-        value = os.getenv(override)
-        config[section][option] = value
-        print "Patched [ %s ] :: %s = %s" % (section, option, value)
-    return config
-
-
-def denormalize_config(config):
-    """ Move DEFAULT back to orphan status. """
-    strio = io.StringIO()
-    config.write(strio)
-    strio.seek(0)
-    return strio.read().replace("[DEFAULT]\n", '')
+def env_override_iter():
+    """ Make dict of ENV overrides. """
+    cfg = {}
+    rep = lambda x: x.replace("_", "-").replace("__", "_")
+    for key, val in os.environ.iteritems():
+        if key.startswith("INFLUX___"):
+            sec, opt = [rep(x) for x in key.lower().split("___")[1:]]
+            if sec not in cfg:
+                cfg[sec] = {}
+            cfg[sec][opt] = val
+    return cfg.iteritems()
 
 
 def main():
@@ -63,10 +24,21 @@ def main():
     if os.path.exists(INFLUXD_CONFIG):
         print "Existing InfluxDB config found at %s" % INFLUXD_CONFIG
     else:
-        create_config()
+        cmd = [ INFLUXD, "config" ]
+        cmd += [ "-config", INFLUXD_PATCH ]
+        if not os.path.exists(INFLUXD_PATCH):
+            with open(INFLUXD_PATCH, "w") as pch:
+                for secname, sec in env_override_iter():
+                    pch.write("[%s]\n" % secname)
+                    for optval in sec.iteritems():
+                        pch.write("  %s = %s\n" % optval)
+                    pch.write("\n")
+        with open(INFLUXD_CONFIG, "w") as cfg:
+            cfg.write(unicode(subprocess.check_output(cmd)))
 
 
-if __name__ == '__main__':
-    INFLUXD_CONFIG = os.environ['INFLUXD_CONFIG']
-    INFLUXD_PATCH = os.environ['INFLUXD_PATCH']
+if __name__ == "__main__":
+    INFLUXD = "/usr/bin/influxd"
+    INFLUXD_CONFIG = os.environ["INFLUXD_CONFIG"]
+    INFLUXD_PATCH = os.environ["INFLUXD_PATCH"]
     main()

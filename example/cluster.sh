@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=0.10.3
+version=0.11.0
 
 echo "Creating docker bridge network \"influxdb\""
 docker network create --driver bridge influxdb
@@ -17,7 +17,7 @@ docker run --detach --name ix0 \
     --publish 8086 \
     --publish 8088 \
     --publish 8091 \
-    amancevice/influxdb-cluster:$version
+    amancevice/influxdb-cluster:$version -join ix0:8091
 
 echo
 echo "Starting node \"ix1\""
@@ -32,7 +32,7 @@ docker run --detach --name ix1 \
     --publish 8086 \
     --publish 8088 \
     --publish 8091 \
-    amancevice/influxdb-cluster:$version -join ix0:8091
+    amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091
 
 echo
 echo "Starting node \"ix2\""
@@ -47,7 +47,7 @@ docker run --detach --name ix2 \
     --publish 8086 \
     --publish 8088 \
     --publish 8091 \
-    amancevice/influxdb-cluster:$version -join ix0:8091
+    amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091,ix2:8091
 
 echo
 echo "Starting node \"ix3\""
@@ -63,7 +63,7 @@ docker run --detach --name ix3 \
     --publish 8086 \
     --publish 8088 \
     --publish 8091 \
-    amancevice/influxdb-cluster:$version -join ix0:8091
+    amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091,ix2:8091,ix3:8091
 
 echo
 echo "Starting node \"ix4\""
@@ -79,7 +79,7 @@ docker run --detach --name ix4 \
     --publish 8086 \
     --publish 8088 \
     --publish 8091 \
-    amancevice/influxdb-cluster:$version -join ix0:8091
+    amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091,ix2:8091,ix3:8091,ix4:8091
 
 echo
 echo "SHOW SERVERS:"

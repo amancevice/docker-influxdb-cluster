@@ -1,6 +1,6 @@
 # InfluxDB Cluster Setup
 
-*InfluxDB version: `0.10.3`*
+*InfluxDB version: `0.11.0`*
 
 A simplistic approach to configuring and starting InfluxDB cluster nodes.
 
