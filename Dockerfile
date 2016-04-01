@@ -1,12 +1,12 @@
 FROM ubuntu:14.04
 MAINTAINER amancevice@cargometrics.com
 
-RUN echo as of 2016-03-23 && \
+RUN echo as of 2016-04-01 && \
     apt-get update && \
     apt-get install -y python wget
 
 # Install InfluxDB
-ENV INFLUXDB_VERSION=0.11.0-1 \
+ENV INFLUXDB_VERSION=0.11.1-1 \
     INFLUXD_CONFIG=/etc/influxdb/influxdb.conf \
     INFLUXD_PATCH=/root/influxdb.conf.patch \
     INFLUX___META___DIR='"/root/.influxdb/meta"' \
