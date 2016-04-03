@@ -5,6 +5,8 @@ RUN echo as of 2016-04-01 && \
     apt-get update && \
     apt-get install -y python wget
 
+EXPOSE 8083 8086 8086/udp 8088 8091
+
 # Install InfluxDB
 ENV INFLUXDB_VERSION=0.11.1-1 \
     INFLUXD_CONFIG=/etc/influxdb/influxdb.conf \

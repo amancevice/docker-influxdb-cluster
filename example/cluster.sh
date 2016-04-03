@@ -13,10 +13,6 @@ docker run --detach --name ix0 \
     --env INFLUX___HTTP___BIND_ADDRESS='"ix0:8086"' \
     --hostname ix0 \
     --net influxdb \
-    --publish 8083 \
-    --publish 8086 \
-    --publish 8088 \
-    --publish 8091 \
     amancevice/influxdb-cluster:$version -join ix0:8091
 
 echo
@@ -28,10 +24,6 @@ docker run --detach --name ix1 \
     --env INFLUX___HTTP___BIND_ADDRESS='"ix1:8086"' \
     --hostname ix1 \
     --net influxdb \
-    --publish 8083 \
-    --publish 8086 \
-    --publish 8088 \
-    --publish 8091 \
     amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091
 
 echo
@@ -43,10 +35,6 @@ docker run --detach --name ix2 \
     --env INFLUX___HTTP___BIND_ADDRESS='"ix2:8086"' \
     --hostname ix2 \
     --net influxdb \
-    --publish 8083 \
-    --publish 8086 \
-    --publish 8088 \
-    --publish 8091 \
     amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091,ix2:8091
 
 echo
@@ -59,10 +47,6 @@ docker run --detach --name ix3 \
     --env INFLUX___HTTP___BIND_ADDRESS='"ix3:8086"' \
     --hostname ix3 \
     --net influxdb \
-    --publish 8083 \
-    --publish 8086 \
-    --publish 8088 \
-    --publish 8091 \
     amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091,ix2:8091,ix3:8091
 
 echo
@@ -75,10 +59,6 @@ docker run --detach --name ix4 \
     --env INFLUX___HTTP___BIND_ADDRESS='"ix4:8086"' \
     --hostname ix4 \
     --net influxdb \
-    --publish 8083 \
-    --publish 8086 \
-    --publish 8088 \
-    --publish 8091 \
     amancevice/influxdb-cluster:$version -join ix0:8091,ix1:8091,ix2:8091,ix3:8091,ix4:8091
 
 echo
