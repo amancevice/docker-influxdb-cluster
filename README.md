@@ -2,6 +2,8 @@
 
 *InfluxDB version: `0.11.1`*
 
+**NOTE** InfluxDB no longer supports clustering as of version `0.12.0`. As such this repository is effectively deprecated. You can still use versions `0.9.6` through `0.11.1`, but I'm no longer maintaining this codebase. See [amancevice/influxdb]() to use versions of InfluxDB past `0.12.0` the fork of this repository.
+
 A simplistic approach to configuring and starting InfluxDB cluster nodes.
 
 The configuration of InfluxDB on startup is determined by two key environmental variables, `INFLUXD_CONFIG` & `INFLUXD_OPTS`, and the `CMD` passed into the Docker invocation.
